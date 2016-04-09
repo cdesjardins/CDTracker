@@ -106,6 +106,7 @@ public class CDTrackerService extends Service {
         } else {
             Toast.makeText(CDTrackerService.this, "Unable to create dir: " + dir.toString(), Toast.LENGTH_SHORT).show();
         }
+        mLocations.clear();
     }
 
     private ArrayList<CDLocation> mLocations = new ArrayList<CDLocation>();
@@ -209,7 +210,6 @@ public class CDTrackerService extends Service {
             mTracking = false;
             if (mLocations.isEmpty() == false) {
                 saveFile();
-                mLocations.clear();
             } else {
                 Toast.makeText(CDTrackerService.this, "No locations to save", Toast.LENGTH_SHORT).show();
             }
