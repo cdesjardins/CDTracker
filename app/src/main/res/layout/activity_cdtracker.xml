@@ -51,4 +51,26 @@
         android:textSize="10dp"
         android:onClick="onExitClick" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="email"
+        android:id="@+id/email"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@+id/exit"
+        android:layout_alignTop="@+id/textViewTitle"
+        android:textSize="10dp"
+        android:onClick="onEmailClick" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        android:id="@+id/clear"
+        android:layout_alignBottom="@+id/textViewTitle"
+        android:layout_toStartOf="@+id/email"
+        android:layout_alignTop="@+id/checkBox"
+        android:textSize="10dp"
+        android:onClick="onClearClick" />
+
 </RelativeLayout>

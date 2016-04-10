@@ -1,15 +1,18 @@
 package info.chrisd.cdtracker;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
 import android.renderscript.ScriptGroup;
@@ -69,6 +72,58 @@ public class CDTracker extends AppCompatActivity {
             }
         }
     };
+
+    private ArrayList<Uri> getAllTracks() {
+        ArrayList<Uri> ret = new ArrayList<Uri>();
+        File sdCard = Environment.getExternalStorageDirectory();
+        File dir = new File (sdCard.getAbsolutePath() + CDTrackerService.SAVE_DIR);
+        for (final File fileEntry : dir.listFiles()) {
+            if (fileEntry.isFile() == true) {
+                ret.add(Uri.fromFile(fileEntry));
+            }
+        }
+        return ret;
+    }
+    private void sendEmail() {
+        ArrayList<Uri> tracks = getAllTracks();
+        if (tracks.isEmpty() == true) {
+            Toast.makeText(CDTracker.this, "There are no tracks to send", Toast.LENGTH_SHORT).show();
+        } else {
+            Intent sendIntent;
+
+            sendIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+            sendIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"tracks@chrisd.info"});
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Tracks");
+            sendIntent.setType("text/plain");
+            sendIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, tracks);
+            startActivity(Intent.createChooser(sendIntent, "Send Mail"));
+        }
+    }
+
+    public void onEmailClick(View v) {
+        sendEmail();
+    }
+
+    public void onClearClick(View v) {
+
+        new AlertDialog.Builder(CDTracker.this)
+                .setTitle("Delete files")
+                .setMessage("Do you really want to delete all tracks")
+                .setNegativeButton(android.R.string.cancel, null) // dismisses by default
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        File sdCard = Environment.getExternalStorageDirectory();
+                        File dir = new File (sdCard.getAbsolutePath() + CDTrackerService.SAVE_DIR);
+                        for (final File fileEntry : dir.listFiles()) {
+                            if (fileEntry.delete() == false) {
+                                Toast.makeText(CDTracker.this, "Unable to delete file: " + fileEntry.toString(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                })
+                .create()
+                .show();
+    }
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {

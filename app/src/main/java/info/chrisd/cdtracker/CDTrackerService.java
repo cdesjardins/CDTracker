@@ -31,6 +31,7 @@ public class CDTrackerService extends Service {
     private static final String TAG = "CDTrackerService";
     public static final String STARTFOREGROUND_ACTION = "info.chrisd.cdtracker.startforeground";
     public static final String LOCATION_ACTION = "info.chrisd.cdtracker.location_update";
+    public static final String SAVE_DIR = "/CDTracker";
     private boolean mTracking = true;
     private boolean mStarted = false;
     PendingIntent mLocationPendingIntent = null;
@@ -89,7 +90,7 @@ public class CDTrackerService extends Service {
     }
     private void saveFile() {
         File sdCard = Environment.getExternalStorageDirectory();
-        File dir = new File (sdCard.getAbsolutePath() + "/CDTracker");
+        File dir = new File (sdCard.getAbsolutePath() + SAVE_DIR);
         if (dir.isDirectory() || dir.mkdir() == true) {
             String fn = "/cdtrack-" + mLocations.get(0).timeString() + ".gpx";
             fn = fn.replace(":", "");
@@ -152,7 +153,7 @@ public class CDTrackerService extends Service {
         crit.setSpeedRequired(false);
         crit.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
         try {
-            locationManager.requestLocationUpdates(10, 0, crit, mLocationPendingIntent);
+            locationManager.requestLocationUpdates(5000, 10, crit, mLocationPendingIntent);
         } catch (SecurityException e) {
             Toast.makeText(CDTrackerService.this, "Unable to request location updates", Toast.LENGTH_SHORT).show();
         }
@@ -164,7 +165,9 @@ public class CDTrackerService extends Service {
         Log.i(TAG, "onDestroy");
         if (mLocationPendingIntent != null) {
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            locationManager.removeUpdates(mLocationPendingIntent);
+            if (locationManager != null) {
+                locationManager.removeUpdates(mLocationPendingIntent);
+            }
             unregisterReceiver(mLocationRx);
         }
         mStarted = false;
@@ -173,25 +176,27 @@ public class CDTrackerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand " + intent + " " + flags + " " + startId);
-        if ((intent.getAction().equals(STARTFOREGROUND_ACTION)) && (mStarted == false)) {
-            Log.i(TAG, "Starting foreground service");
-            mStarted = true;
-            Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_pin);
-            Intent notificationIntent = new Intent(this, CDTracker.class);
-            notificationIntent.setAction("info.chrisd.cdtracker.main");
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        if (intent != null) {
+            if ((intent.getAction().equals(STARTFOREGROUND_ACTION)) && (mStarted == false)) {
+                Log.i(TAG, "Starting foreground service");
+                mStarted = true;
+                Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_pin);
+                Intent notificationIntent = new Intent(this, CDTracker.class);
+                notificationIntent.setAction("info.chrisd.cdtracker.main");
+                notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setContentTitle("CDTracker")
-                    .setTicker("CDTracker")
-                    .setContentText("CDTracker running")
-                    .setSmallIcon(R.drawable.ic_pin)
-                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true)
-                    .build();
-            startForeground(543, notification);
+                PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                Notification notification = new NotificationCompat.Builder(this)
+                        .setContentTitle("CDTracker")
+                        .setTicker("CDTracker")
+                        .setContentText("CDTracker running")
+                        .setSmallIcon(R.drawable.ic_pin)
+                        .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                        .setContentIntent(pendingIntent)
+                        .setOngoing(true)
+                        .build();
+                startForeground(543, notification);
+            }
         }
         return START_STICKY;
     }
