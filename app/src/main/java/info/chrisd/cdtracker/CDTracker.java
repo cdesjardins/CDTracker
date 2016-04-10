@@ -108,7 +108,7 @@ public class CDTracker extends AppCompatActivity {
 
         new AlertDialog.Builder(CDTracker.this)
                 .setTitle("Delete files")
-                .setMessage("Do you really want to delete all tracks")
+                .setMessage("Do you really want to delete all tracks?")
                 .setNegativeButton(android.R.string.cancel, null) // dismisses by default
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {

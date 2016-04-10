@@ -65,7 +65,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Clear"
+        android:text="Delete"
         android:id="@+id/clear"
         android:layout_alignBottom="@+id/textViewTitle"
         android:layout_toStartOf="@+id/email"
