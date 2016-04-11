@@ -26,6 +26,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class CDTrackerService extends Service {
     private static final String TAG = "CDTrackerService";
@@ -35,6 +36,7 @@ public class CDTrackerService extends Service {
     private boolean mTracking = true;
     private boolean mStarted = false;
     PendingIntent mLocationPendingIntent = null;
+    private ArrayList<CDLocation> mLocations = new ArrayList<CDLocation>();
 
     private class CDLocation {
         public CDLocation(Location l) {
@@ -59,6 +61,10 @@ public class CDTrackerService extends Service {
             String ret = new String();
             ret = dateFormat.format(date) + "T" + timeFormat.format(date) + "Z";
             return ret;
+        }
+
+        public Location getLoc() {
+            return mLoc;
         }
 
         private Location mLoc;
@@ -110,8 +116,6 @@ public class CDTrackerService extends Service {
         mLocations.clear();
     }
 
-    private ArrayList<CDLocation> mLocations = new ArrayList<CDLocation>();
-
     private BroadcastReceiver mLocationRx = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -126,7 +130,6 @@ public class CDTrackerService extends Service {
                         }
                     }
                 }
-                //Log.i(TAG, "got location " + l);
             }
         }
     };
@@ -219,6 +222,15 @@ public class CDTrackerService extends Service {
                 Toast.makeText(CDTrackerService.this, "No locations to save", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public ArrayList<Location> getRecentTrackPoints() {
+        List<CDLocation> tail = mLocations.subList(Math.max(mLocations.size() - 10, 0), mLocations.size());
+        ArrayList<Location> ret = new ArrayList<Location>();
+        for (CDLocation l : tail) {
+            ret.add(l.getLoc());
+        }
+        return ret;
     }
 
     private final IBinder mBinder = new CDTrackerBinder();

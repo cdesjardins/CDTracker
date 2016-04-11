@@ -66,12 +66,16 @@ public class CDTracker extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(CDTrackerService.LOCATION_ACTION)) {
                 Location l = (Location) intent.getExtras().get(LocationManager.KEY_LOCATION_CHANGED);
-                DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                Date date = new Date(l.getTime());
-                mLogView.append(format.format(date) + " " + l.getLongitude() + " " + l.getLatitude() + "\n");
+                logNewTrackPoint(l);
             }
         }
     };
+
+    private void logNewTrackPoint(Location l) {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date(l.getTime());
+        mLogView.append(format.format(date) + " " + l.getLongitude() + " " + l.getLatitude() + "\n");
+    }
 
     private ArrayList<Uri> getAllTracks() {
         ArrayList<Uri> ret = new ArrayList<Uri>();
@@ -127,20 +131,16 @@ public class CDTracker extends AppCompatActivity {
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            // This is called when the connection with the service has been
-            // established, giving us the service object we can use to
-            // interact with the service.  Because we have bound to a explicit
-            // service that we know is running in our own process, we can
-            // cast its IBinder to a concrete class and directly access it.
             mBoundService = ((CDTrackerService.CDTrackerBinder)service).getService();
+            if (mBoundService != null) {
+                for (Location l : mBoundService.getRecentTrackPoints()) {
+                    logNewTrackPoint(l);
+                }
+            }
             Log.i(TAG, "service connected");
         }
 
         public void onServiceDisconnected(ComponentName className) {
-            // This is called when the connection with the service has been
-            // unexpectedly disconnected -- that is, its process crashed.
-            // Because it is running in our same process, we should never
-            // see this happen.
             mBoundService = null;
             Log.i(TAG, "service disconnected");
         }
