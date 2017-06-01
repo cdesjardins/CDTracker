@@ -1,7 +1,6 @@
 package info.chrisd.cdtracker;
 
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,13 +8,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
-import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -26,8 +23,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -116,6 +111,7 @@ public class CDTracker extends AppCompatActivity {
                 .setNegativeButton(android.R.string.cancel, null) // dismisses by default
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
+                        stopTrack();
                         File sdCard = Environment.getExternalStorageDirectory();
                         File dir = new File (sdCard.getAbsolutePath() + CDTrackerService.SAVE_DIR);
                         for (final File fileEntry : dir.listFiles()) {
@@ -123,6 +119,7 @@ public class CDTracker extends AppCompatActivity {
                                 Toast.makeText(CDTracker.this, "Unable to delete file: " + fileEntry.toString(), Toast.LENGTH_SHORT).show();
                             }
                         }
+                        closeApp();
                     }
                 })
                 .create()
@@ -160,8 +157,11 @@ public class CDTracker extends AppCompatActivity {
 
     public void onExitClick(View v) {
         stopTrack();
+        closeApp();
+    }
+
+    private void closeApp() {
         Intent stopIntent = new Intent(CDTracker.this, CDTrackerService.class);
-        //stopIntent.setAction(CDTrackerService.STOPFOREGROUND_ACTION);
         stopService(stopIntent);
         finish();
     }
