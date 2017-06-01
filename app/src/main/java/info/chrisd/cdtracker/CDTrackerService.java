@@ -213,13 +213,15 @@ public class CDTrackerService extends Service {
     public void startTrack() {
         mTracking = true;
     }
-    public void stopTrack() {
+    public void stopTrack(boolean save) {
         synchronized (mLocations) {
             mTracking = false;
-            if (mLocations.isEmpty() == false) {
-                saveFile();
-            } else {
-                Toast.makeText(CDTrackerService.this, "No locations to save", Toast.LENGTH_SHORT).show();
+            if (save) {
+                if (mLocations.isEmpty() == false) {
+                    saveFile();
+                } else {
+                    Toast.makeText(CDTrackerService.this, "No locations to save", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }

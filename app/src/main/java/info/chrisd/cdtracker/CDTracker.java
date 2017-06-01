@@ -31,8 +31,6 @@ import java.util.Date;
 public class CDTracker extends AppCompatActivity {
     private static final String TAG = "CDTracker";
     private TextView mLogView;
-    private TextView mTitle;
-    private CheckBox mTracking;
     private CDTrackerService mBoundService;
 
     @Override
@@ -40,8 +38,6 @@ public class CDTracker extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cdtracker);
         mLogView = (TextView)findViewById(R.id.textView);
-        mTitle = (TextView)findViewById(R.id.textViewTitle);
-        mTracking = (CheckBox)findViewById(R.id.checkBox);
         mLogView.setMovementMethod(new ScrollingMovementMethod());
         Intent startIntent = new Intent(CDTracker.this, CDTrackerService.class);
         startIntent.setAction(CDTrackerService.STARTFOREGROUND_ACTION);
@@ -111,7 +107,7 @@ public class CDTracker extends AppCompatActivity {
                 .setNegativeButton(android.R.string.cancel, null) // dismisses by default
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
-                        stopTrack();
+                        stopTrack(false);
                         File sdCard = Environment.getExternalStorageDirectory();
                         File dir = new File (sdCard.getAbsolutePath() + CDTrackerService.SAVE_DIR);
                         for (final File fileEntry : dir.listFiles()) {
@@ -149,14 +145,14 @@ public class CDTracker extends AppCompatActivity {
         }
     }
 
-    private void stopTrack() {
+    private void stopTrack(boolean save) {
         if (mBoundService != null) {
-            mBoundService.stopTrack();
+            mBoundService.stopTrack(save);
         }
     }
 
     public void onExitClick(View v) {
-        stopTrack();
+        stopTrack(true);
         closeApp();
     }
 
@@ -164,14 +160,6 @@ public class CDTracker extends AppCompatActivity {
         Intent stopIntent = new Intent(CDTracker.this, CDTrackerService.class);
         stopService(stopIntent);
         finish();
-    }
-
-    public void onTrackingClick(View v) {
-        if (mTracking.isChecked() == true) {
-            startTrack();
-        } else {
-            stopTrack();
-        }
     }
 }
 
