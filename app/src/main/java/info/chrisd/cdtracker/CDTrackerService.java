@@ -130,6 +130,9 @@ public class CDTrackerService extends Service {
                         }
                     }
                 }
+            } else if (intent.getAction().equals(Intent.ACTION_SHUTDOWN)) {
+                stopTrack(true);
+                Toast.makeText(CDTrackerService.this, "CDTracker shutting down", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -142,7 +145,10 @@ public class CDTrackerService extends Service {
         super.onCreate();
         Log.i(TAG, "onCreate");
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        registerReceiver(mLocationRx, new IntentFilter(LOCATION_ACTION));
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(LOCATION_ACTION);
+        intentFilter.addAction(Intent.ACTION_SHUTDOWN);
+        registerReceiver(mLocationRx, intentFilter);
         mLocationPendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(LOCATION_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
         Criteria crit = new Criteria();
         crit.setAccuracy(Criteria.ACCURACY_FINE);
