@@ -35,8 +35,10 @@ public class CDTrackerService extends Service {
     public static final String SAVE_DIR = "/CDTracker";
     private boolean mTracking = true;
     private boolean mStarted = false;
-    PendingIntent mLocationPendingIntent = null;
+    private PendingIntent mLocationPendingIntent = null;
     private ArrayList<CDLocation> mLocations = new ArrayList<CDLocation>();
+    private FileOutputStream mFs;
+    private File mFile;
 
     private class CDLocation {
         public CDLocation(Location l) {
@@ -94,26 +96,52 @@ public class CDTrackerService extends Service {
                 "</gpx>";
         fs.write(xml.getBytes());
     }
-    private void saveFile() {
+
+    private void openFile() {
         File sdCard = Environment.getExternalStorageDirectory();
         File dir = new File (sdCard.getAbsolutePath() + SAVE_DIR);
         if (dir.isDirectory() || dir.mkdir() == true) {
             String fn = "/cdtrack-" + mLocations.get(0).timeString() + ".gpx";
             fn = fn.replace(":", "");
-            File f = new File(dir.getAbsolutePath() + fn);
+            mFile = new File(dir.getAbsolutePath() + fn);
             try {
-                FileOutputStream fs = new FileOutputStream(f);
-                xmlHeader(fs);
-                xmlPoints(fs);
-                xmlFooter(fs);
-                Toast.makeText(CDTrackerService.this, "Wrote file" + f.toString(), Toast.LENGTH_SHORT).show();
+                mFs = new FileOutputStream(mFile);
+                xmlHeader(mFs);
+                Toast.makeText(CDTrackerService.this, "Created " + mFile.toString(), Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
-                Toast.makeText(CDTrackerService.this, "Unable to create file: " + f.toString(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(CDTrackerService.this, "Unable to create file: " + mFile.toString(), Toast.LENGTH_SHORT).show();
             }
         } else {
             Toast.makeText(CDTrackerService.this, "Unable to create dir: " + dir.toString(), Toast.LENGTH_SHORT).show();
         }
-        mLocations.clear();
+    }
+
+    private void closeFile() {
+        if (mFs != null) {
+            try {
+                xmlFooter(mFs);
+                mFs.close();
+            } catch (IOException e) {
+                Toast.makeText(CDTrackerService.this, "Unable to close file: " + mFile.toString(), Toast.LENGTH_SHORT).show();
+            }
+            Toast.makeText(CDTrackerService.this, "Wrote file" + mFile.toString(), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(CDTrackerService.this, "No locations to save", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveFile() {
+        if (mLocations.isEmpty() == false) {
+            if (mFs == null) {
+                openFile();
+            }
+            try {
+                xmlPoints(mFs);
+            } catch (IOException e) {
+                Toast.makeText(CDTrackerService.this, "Unable to write file: " + mFile.toString(), Toast.LENGTH_SHORT).show();
+            }
+            mLocations.clear();
+        }
     }
 
     private BroadcastReceiver mLocationRx = new BroadcastReceiver() {
@@ -165,6 +193,7 @@ public class CDTrackerService extends Service {
             locationManager.requestLocationUpdates(5000, 10, crit, mLocationPendingIntent);
         } catch (SecurityException e) {
             Toast.makeText(CDTrackerService.this, "Unable to request location updates", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Exception: ", e);
         }
     }
 
@@ -223,11 +252,8 @@ public class CDTrackerService extends Service {
         synchronized (mLocations) {
             mTracking = false;
             if (save) {
-                if (mLocations.isEmpty() == false) {
-                    saveFile();
-                } else {
-                    Toast.makeText(CDTrackerService.this, "No locations to save", Toast.LENGTH_SHORT).show();
-                }
+                saveFile();
+                closeFile();
             }
         }
     }
